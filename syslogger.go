@@ -65,11 +65,13 @@ func NewSysLogger(prefix string, p syslog.Priority) *SysLogger {
 
 // clients code should use uppercase Log to send messages to the listeining goroutine
 func (s *SysLogger) toLog(msg string) {
+	truncated := []byte(msg)
+
 	if len(msg) > msgMaxLen {
 		// msg should must not be over 79 characthers so panic
-		panic(MsgToLong)
+		truncated = truncated[:79]
 	}
-	s.Messages <- msg
+	s.Messages <- string(truncated)
 }
 
 // Log does what it says but it doesn't assure the message will be send.
