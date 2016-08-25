@@ -99,5 +99,5 @@ func (s *SysLogger) Close() {
 
 // log not uppercase is used internaly to actually print to syslog
 func (s *SysLogger) log(msg string) {
-	s.logger.Print(msg)
+	s.logger.Output(2, msg)
 }
