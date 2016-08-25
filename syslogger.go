@@ -8,13 +8,10 @@
 package syslogger
 
 import (
-	"fmt"
 	"log"
 	"log/syslog"
 	"time"
 )
-
-var MsgToLong error = fmt.Errorf("message is to long > 79  charachters\n")
 
 const (
 	msgMaxLen = 79
