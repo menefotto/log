@@ -17,13 +17,13 @@ const (
 	msgMaxLen = 79
 )
 
-type SysLogger struct {
+type Logger struct {
 	logger   *log.Logger
 	Messages chan string
 	Done     chan struct{}
 }
 
-func NewSysLogger(prefix string, p syslog.Priority) *SysLogger {
+func NewSysLogger(prefix string, p syslog.Priority) *Logger {
 	locallog, err := syslog.NewLogger(p|syslog.LOG_USER, log.Lshortfile)
 	if err != nil {
 		//sonic shouldn't start if the syslog doesn't work so panic
@@ -32,13 +32,13 @@ func NewSysLogger(prefix string, p syslog.Priority) *SysLogger {
 
 	locallog.SetPrefix(prefix)
 
-	log := &SysLogger{
+	log := &Logger{
 		logger:   locallog,
 		Messages: make(chan string, 32),
 		Done:     make(chan struct{}, 1),
 	}
 
-	go func(log *SysLogger) {
+	go func(log *Logger) {
 		for {
 			select {
 			case <-log.Done:
@@ -61,7 +61,7 @@ func NewSysLogger(prefix string, p syslog.Priority) *SysLogger {
 }
 
 // clients code should use uppercase Log to send messages to the listeining goroutine
-func (s *SysLogger) toLog(msg string) {
+func (s *Logger) toLog(msg string) {
 	truncated := []byte(msg)
 
 	if len(msg) > msgMaxLen {
@@ -72,14 +72,14 @@ func (s *SysLogger) toLog(msg string) {
 }
 
 // Log does what it says but it doesn't assure the message will be send.
-func (s *SysLogger) Log(msg string) {
+func (s *Logger) Log(msg string) {
 	s.toLog(msg)
 }
 
 // LogAndWait as the name suggest logs a message and waits almost assuring
 // the the message will be sent, use case are when sending a log before
 // the planed programs finish. Adds a faily expencive overhead, 5 millisecons
-func (s *SysLogger) MustLog(msg string) {
+func (s *Logger) MustLog(msg string) {
 	s.toLog(msg)
 	time.Sleep(time.Millisecond * 5)
 }
@@ -90,11 +90,11 @@ func (s *SysLogger) MustLog(msg string) {
 // actually exting, any message sent after the close method is called will a result
 // in a sent operation to a close channel.
 
-func (s *SysLogger) Close() {
+func (s *Logger) Close() {
 	s.Done <- struct{}{}
 }
 
 // log not uppercase is used internaly to actually print to syslog
-func (s *SysLogger) log(msg string) {
+func (s *Logger) log(msg string) {
 	s.logger.Output(2, msg)
 }
