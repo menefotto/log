@@ -23,7 +23,7 @@ type Logger struct {
 	Done     chan struct{}
 }
 
-func NewSysLogger(prefix string, p syslog.Priority) *Logger {
+func NewLogger(prefix string, p syslog.Priority) *Logger {
 	locallog, err := syslog.NewLogger(p|syslog.LOG_USER, log.Lshortfile)
 	if err != nil {
 		//sonic shouldn't start if the syslog doesn't work so panic
