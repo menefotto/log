@@ -23,17 +23,17 @@ type Logger struct {
 	Done     chan struct{}
 }
 
-func NewLogger(prefix string, p syslog.Priority) *Logger {
-	locallog, err := syslog.NewLogger(p|syslog.LOG_USER, log.Lshortfile)
+func New(prefix string, p syslog.Priority) *Logger {
+	stdlog, err := syslog.NewLogger(p|syslog.LOG_USER, log.Lshortfile)
 	if err != nil {
 		//sonic shouldn't start if the syslog doesn't work so panic
 		panic(err)
 	}
 
-	locallog.SetPrefix(prefix)
+	stdlog.SetPrefix(prefix)
 
 	log := &Logger{
-		logger:   locallog,
+		logger:   stdlog,
 		Messages: make(chan string, 32),
 		Done:     make(chan struct{}, 1),
 	}
