@@ -1,2 +1,0 @@
-Fix calldepth bug, right now it sends a file name which is the one that starts 
-the background coroutine.
