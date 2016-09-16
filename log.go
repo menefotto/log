@@ -50,7 +50,7 @@ func New(prefix string, filename string) *Logger {
 
 	log := &Logger{
 		logger:   stdlog,
-		Messages: make(chan string, 32),
+		Messages: make(chan string, 1024),
 		Done:     make(chan struct{}, 1),
 	}
 
