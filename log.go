@@ -22,7 +22,6 @@ import (
 )
 
 func New(prefix string, filename string) *Logger {
-
 	var (
 		stdlog  *log.Logger
 		err     error
@@ -35,13 +34,13 @@ func New(prefix string, filename string) *Logger {
 		priority := syslog.LOG_EMERG | syslog.LOG_USER
 		stdlog, err = syslog.NewLogger(priority, flag)
 		if err != nil {
-			panic(err)
+			return nil
 		}
 	default:
 		flag = os.O_CREATE | os.O_RDWR | os.O_APPEND
 		logfile, err = os.OpenFile(filename, flag, 0660)
 		if err != nil {
-			panic(err)
+			return nil
 		}
 		stdlog = log.New(logfile, prefix, flag)
 	}
