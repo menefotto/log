@@ -26,20 +26,33 @@ It provides the following:
  first one send the message in a non blocking manner and the second one as well,
  though the second one syncs to disk in case of file logger assuring the log is sent.
  
-- Close() closes the logger, it's important to do so because otherwise we would leak 
-  the goroutine who does the job in the background.
+-Close() closes the logger, it's important to do so because otherwise we would leak 
+ the goroutine who does the job in the background.
 
-#### Philosophy
-This software is developed following the "mantra" keep it simple, stupid or better 
-known as KISS. Something so simple like a cache with auto eviction should not required 
-over engineered solutions. Though it provides most of the functionality needed by 
-generic configuration files, and most important of all meaning full error messages.
+#### How to use it
+It's pretty simple
+```
+  l := log.New("[MYAPPNAME]","") // syslog
+  l := log.New("[MYAPPNAME]","local.log") // local file log
+  // then in order to log
+  l.Log("My message") // logs optmistically
+  l.SyncLog("My message") tries to sync to disk in case it's logger with local file
+  // very important don't forget to close it once done
+  l.Close() 
+```
 
 ### Important
 Due to a design decision this logger is an optimistic logger, that means you can 
 afford to lose log messages, however to minimize the risk when you close the logger 
 in the edge case that your program immediately terminates, please introduce a 
 artificial sleep of at least 1 second.
+
+
+#### Philosophy
+This software is developed following the "mantra" keep it simple, stupid or better 
+known as KISS. Something so simple like a cache with auto eviction should not required 
+over engineered solutions. Though it provides most of the functionality needed by 
+generic configuration files, and most important of all meaning full error messages.
 
 #### Disclaimer
 This software in alpha quality, don't use it in a production environment, it's not even completed.
