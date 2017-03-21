@@ -21,12 +21,16 @@ import (
 	"time"
 )
 
+// New creates a new logger takes a prefix with is going to be added to every line
+// logged and a filename, if the file is omited and is given an empty string like
+// so "" the local syslog will be used, if everything fails a nil logger will be
+// returned else a valid logger instance is returned.
 func New(prefix string, filename string) *Logger {
 	var (
 		stdlog  *log.Logger
+		logfile *os.File
 		err     error
 		flag    int = log.Lshortfile
-		logfile *os.File
 	)
 
 	switch {
@@ -49,8 +53,10 @@ func New(prefix string, filename string) *Logger {
 
 	log := &Logger{
 		logger:   stdlog,
+		file:     logfile,
 		Messages: make(chan string, 1024),
-		Done:     make(chan struct{}, 1),
+		Done:     make(chan bool, 1),
+		Sync:     make(chan bool, 1),
 	}
 
 	go func(log *Logger) {
@@ -66,12 +72,16 @@ func New(prefix string, filename string) *Logger {
 				time.Sleep(time.Millisecond * 250)
 
 				defer func() {
-					if logfile != nil {
-						logfile.Close()
+					if log.file != nil {
+						log.file.Close()
 					}
 				}()
 
 				return
+			case <-log.Sync:
+				if log.file != nil {
+					_ = log.file.Sync()
+				}
 			case msg := <-log.Messages:
 				log.log(msg)
 			}
@@ -82,15 +92,25 @@ func New(prefix string, filename string) *Logger {
 
 }
 
+// Logger struct
 type Logger struct {
 	logger   *log.Logger
+	file     *os.File
 	Messages chan string
-	Done     chan struct{}
+	Done     chan bool
+	Sync     chan bool
 }
 
-// Log does what it says but it doesn't assure the message will be send.
+// Log logs the message but doesn't assure that the message it being sent
 func (s *Logger) Log(msg string) {
 	s.toLog(msg)
+}
+
+// SyncLog logs the message and in case of a file logger syncs it to disk immidiately
+// assuring logs are always written to disk.
+func (s *Logger) SyncLog(msg string) {
+	s.toLog(msg)
+	s.Sync <- true
 }
 
 // Typically called in defer log.Close() fashion for short lived objects otherwise
@@ -98,27 +118,26 @@ func (s *Logger) Log(msg string) {
 // messages are still left on the Messages channel, they will be sent to syslog before
 // actually exting, any message sent after the close method is called will a result
 // in a sent operation to a close channel.
-
 func (s *Logger) Close() {
-	s.Done <- struct{}{}
+	s.Done <- true
 }
 
 const (
-	msgMaxLen = 79
+	MsgMaxLen = 79
 )
 
-// log not uppercase is used internaly to actually print to syslog
 func (s *Logger) log(msg string) {
 	s.logger.Output(2, msg)
 }
 
-// clients code should use uppercase Log to send messages to the listeining goroutine
 func (s *Logger) toLog(msg string) {
-	truncated := []byte(msg)
+	var truncated string
 
-	if len(msg) > msgMaxLen {
-		// msg should must not be over 79 characthers so panic
-		truncated = truncated[:79]
+	if len(msg) > MsgMaxLen {
+		truncated = msg[:79]
+	} else {
+		truncated = msg
 	}
+
 	s.Messages <- string(truncated)
 }

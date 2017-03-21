@@ -22,7 +22,10 @@ func TestMsgToLong(t *testing.T) {
 func TestFileLogger(t *testing.T) {
 	log := New("logger-test:", "local.log")
 	log.Log("It works!")
+	log.SyncLog("2")
+	time.Sleep(1 * time.Second)
 	log.Close()
+	time.Sleep(1 * time.Second)
 	os.Remove("local.log")
 }
 
