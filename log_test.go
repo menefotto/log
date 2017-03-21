@@ -8,7 +8,7 @@ import (
 )
 
 func TestMsgToLong(t *testing.T) {
-	log := New("logger-test:", "")
+	log := New("logger-test:", "local.log")
 	log.Log("it works! to long not to long to long not to long but it is too long or it isnt't na it isn't that long :)")
 	log.Log("here we go")
 	time.Sleep(time.Microsecond * 1)
@@ -17,6 +17,9 @@ func TestMsgToLong(t *testing.T) {
 	// done otherwise the message won't get send since the however still negletable
 	// in normal apps.
 	log.Close()
+	time.Sleep(1 * time.Second)
+	os.Remove("local.log")
+
 }
 
 func TestFileLogger(t *testing.T) {

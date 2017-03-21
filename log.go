@@ -134,6 +134,7 @@ func (s *Logger) toLog(msg string) {
 	var truncated string
 
 	if len(msg) > MsgMaxLen {
+		log.Println(len(msg))
 		truncated = msg[:79]
 	} else {
 		truncated = msg
